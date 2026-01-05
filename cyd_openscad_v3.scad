@@ -8,11 +8,11 @@ $fa=$preview ? 15 : 5;
 length=86;
 //pcb宽
 width=50;
-//pcb高
-height=10;
+//pcb高(整体部件从底部倒顶部最大高度），用于设定盒子尺寸
+height=11;
 
 //下部盒子高度
-baseheight=8;
+baseheight=11;
 //pcb和盒子壁之间的间隙
 gapx=1;
 gapy=1;
@@ -23,28 +23,44 @@ wally=2;
 wallz=1;
 //圆角尺寸
 roundsize=5;
-//倒脚尺寸
+//前后面倒脚尺寸
 chamfersize=1;
 //上下盒子交叉部分尺寸
 intel_height_size=3;
 
 //屏幕及pcb
-screen_length_out=69.4;
-screen_wildth_out=50;
-screen_length_in=59.45;
-screen_wildth_in=45.2;
-screen_height=4;
-screen_adj=3;
+screen_length_out=72;
+screen_wildth_out=52.2;
+screen_length_in=60;
+screen_wildth_in=46;
+screen_adj_x=-2.9;  //屏幕左侧遮蔽到中心的距离，减去(screen_length_in/2)为x汁,原因是部分cyd板子，屏幕有错位
+screen_mask_thickness=0.6;  //屏幕遮蔽部分厚度
+screen_height=4;   //屏幕厚度（测量pcb和屏幕整体厚度然后减去pcb_thickness)
 pcb_thickness=1.6;
 
 shift=20;
 
-//是否画底部盒子
-isdrawbase=true;
-//是否画顶部盒子
-isdrawtop=true;
 
+isdrawbase=true;//是否画底部盒子
+isdrawtop=true;//是否画顶部盒子
 isdrawldr=true;
+isdrawled=true;
+ldr_l=4;
+ldr_w=5.5;
+ldr_p_x=-39.4;
+ldr_p_y=14.2;
+led_l=5;
+led_w=5;
+led_p_x=-13.4;
+led_p_y=-12.8;
+
+support_pin_length=78;
+support_pin_wildth=42;
+support_pin_d1=5.5;
+support_pin_d2=2.6;  //要能穿过pcb上的定位孔
+support_pin_d3=3.2;  //上盖内孔
+
+eps=0.001;
 
 //画盒子同时做Z轴rouding和底面chamfer
 module drawbox(L,W,H,R,BR){
@@ -53,77 +69,53 @@ module drawbox(L,W,H,R,BR){
 
 }
 
-module outline(wall = 1) {
-  difference() {
-    offset(wall / 2) children();
-    offset(-wall / 2) children();
-  }
-}
-
-
 //pcb长+X方向两个墙壁+X方形两个间隙
 L=length+2*wallx+2*gapx; 
 W=width+2*wally+2*gapy;
 H=baseheight+wallz+gapz;
+R=roundsize;
+BR=chamfersize;
 
-//translate([L/2,W/2,H/2]){
+//底座由wallz+gapz高度构建一个台面
+//在台面上的四个支撑柱高度由屏幕高度决定,支撑柱上的定位柱高度超过pcbthickness
+//
 if (isdrawbase) { 
-    R=roundsize;
-    BR=chamfersize;
-difference(){
-    up(wallz+gapz) cuboid([L,W,H],rounding=R,edges="Z",anchor=BOT);
-    up(wallz+gapz) cuboid([L-2*wallx,W-2*wally,H],rounding=R,edges="Z",anchor=BOT);
-//        up(baseheight+wallz+gapz-intel_height_size+0.001) cuboid([L-wallx,W-wally,intel_height_size],rounding=R,edges="Z",anchor=BOT);
-}
-//    grid_copies([78,42], n=[2,2]) 
-//    	cylinder(h=3,d=5.5,anchor=BOT) position(TOP) cylinder(h=3,d=3,anchor=BOT);
-difference(){
-	union(){
-	//basewall	
-    drawbox(L,W,wallz,R,BR);
-	//gap
-	up(1) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP)
-	//four support stand
-    grid_copies([78,42], n=[2,2]) 
-    	cylinder(h=3,d=5.5,anchor=BOT) position(TOP) cylinder(h=3,d=3,anchor=BOT);
-}; 
-        up(0.4) cuboid([screen_length_out,screen_wildth_out,screen_height],anchor=BOT);
-        down(1) left(screen_adj) cuboid([screen_length_in,screen_wildth_in,screen_height],anchor=BOT);
-		if (isdrawldr){ left(40) back(15) cuboid([3,6,screen_height],anchor=BOT);}
-}
+    difference(){
+        union(){
+            drawbox(L,W,wallz,R,BR);  //basewall
+            up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
+            grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) cylinder(h=screen_height-gapz-screen_mask_thickness,d=support_pin_d1,anchor=BOT) position(TOP) cylinder(h=pcb_thickness+2,d=support_pin_d2,anchor=BOT);  //支撑柱及定位孔
+            if (isdrawldr){ move([ldr_p_x,ldr_p_y,wallz+gapz]) cuboid([ldr_l+1,ldr_w+1,screen_height-gapz-screen_mask_thickness],anchor=BOT);}  //LDR传感器屏蔽外壳    
+        }; 
+            up(screen_mask_thickness) cuboid([screen_length_out,screen_wildth_out,screen_height],anchor=BOT);  //预留screen_mask_thickness厚度的屏幕遮罩,挖出屏幕嵌入空间
+            move([screen_adj_x,0,0]) cuboid([screen_length_in,screen_wildth_in,screen_mask_thickness],anchor=BOT);  //挖出屏幕外漏用于显示的部分
+        if (isdrawldr){ move([ldr_p_x,ldr_p_y,0]) cuboid([ldr_l,ldr_w,wallz+gapz+screen_height-screen_mask_thickness],anchor=BOT);} //LDR挖孔    
+    }
+//底座
+    up(wallz+gapz) union(){
+        difference(){
+            cuboid([L,W,H],rounding=R,edges="Z",anchor=BOT);  //画外立面
+            up(H-intel_height_size) cuboid([L-wallx-gapx/2,W-wally-gapy/2,intel_height_size+eps],rounding=R,edges="Z",anchor=BOT);  //切出上下盒子交叉部分
+            up(H-2.2) 
+                minkowski(){
+                    cuboid([L-wallx-gapx/2,W-wally-gapy/2,eps],rounding=R,edges="Z",anchor=BOT);
+                    sphere(.8);
+            } 
+        down(eps) cuboid([L-2*wallx,W-2*wally,H+2*eps],rounding=R,edges="Z",anchor=BOT);  // 切出下部盒子内空
+}}}
 
-}
-
-
-//    R=roundsize;
-//    BR=chamfersize;
-//    difference(){
-//        echo (L=L,W=W,H=H,R=R,BR=BR);
-//        echo (up=wallz,L=L-2*wallx,W=W-2*wally,H=H-wallz,rounding=R);
-//        echo (up=(H-intel_height_size)/2,L=L-wallx,W=W-wally,H=intel_height_size);
-//        //画出整体
-//        drawbox(L,W,H,R,BR);
-//        //掏出边缘交错部分
-//        up(baseheight+wallz+gapz-intel_height_size+0.001) cuboid([L-wallx,W-wally,intel_height_size],rounding=R,edges="Z",anchor=BOT);
-//        //掏出pcb+gap
-//        up(wallz+gapz) cuboid([L-2*wallx,W-2*wally,H],rounding=R,edges="Z",anchor=BOT);
-//        //屏幕嵌入的尺寸
-//        up(0.4) cuboid([69.4,50.2,1],anchor=BOT);
-//        //屏幕外漏的尺寸
-//        cuboid([59.45,45.2,12],anchor=CENTER);
-//       
-//    } 
-
+//上盖
 if (isdrawtop) {
-    H=height-baseheight+wallz+gapz;
-    R=roundsize;
-    BR=1;
     back(shift+W)
     union(){
-        echo (L=L,W=W,H=H,R=R,BR=BR);
-        echo (up=(H-intel_height_size)/2+0.001,L=L-wallx,W=W-wally,H=H);
-        drawbox(L,W,H,R,BR); 
-        up((H-intel_height_size)/2+0.001)
-        #cuboid([L-wallx,W-wally,2],rounding=R,edges="Z",anchor=CENTER);
-    }
+        drawbox(L,W,wallz,R,BR);  //上盖底层带倒脚
+        //up(wallz)  minkowski(){ cuboid([L-wallx-gapx/2,W-wally-gapy/2,eps],rounding=R,edges="Z",anchor=BOT); sphere(.8);} 
+        up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
+        grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) 
+        difference(){
+            cylinder(h=screen_height-gapz-screen_mask_thickness,d=support_pin_d1,anchor=BOT);
+            cylinder(h=pcb_thickness+2,d=support_pin_d3,anchor=BOT);  //支撑柱及定位孔
+        }
+        if (isdrawled){ move([led_p_x,led_p_y,wallz+gapz]) cuboid([led_l+1,led_w+1,screen_height-gapz-screen_mask_thickness],anchor=BOT);}  //LDR传感器屏蔽外壳    
+    }; 
 }
