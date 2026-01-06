@@ -57,8 +57,8 @@ ldr_p_y=14.2;
 isdrawled=true;
 led_l=6;
 led_w=6;
-led_p_x=-13.4;
-led_p_y=-12.8;
+led_p_x=13.4;
+led_p_y=12.8;
 ledheight=4.2;
 typec_l=5.6;
 typec_r=1.6;
@@ -100,13 +100,15 @@ module sphere_round_rect(L,W,R,d_tube){
 }
 
 module button2d(){
+    move([31.6,-19,(wallz+gapz)/2])
+    linear_extrude(wallz+gapz,center=true)
     union(){
 	    rect([0.8,9.2]) 
 	    left(4.2) rect([0.8,9.2]);
 	    right(4.2) rect([0.8,9.2]);
 	    fwd(4.2) zrot(90) rect([0.8,9.2]);
     }
-}
+} 
 module top_case(){
     color("red")
     difference(){
@@ -122,7 +124,9 @@ module top_case(){
                 } 
             }
         if (isdrawled){ move([led_p_x,led_p_y,0.4]) cuboid([led_l,led_w,ledheight+wallz+gapz],anchor=BOT);}  //LED屏蔽外壳
+        move([25,0,0]) grid_copies([3,3], n=[5,5]) cube(2);  //散热孔
         microtypec();
+        button2d();
     }
 }
 
