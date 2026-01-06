@@ -99,6 +99,14 @@ module sphere_round_rect(L,W,R,d_tube){
     path_sweep(vnf, path, closed=true);
 }
 
+module button2d(){
+    union(){
+	    rect([0.8,9.2]) 
+	    left(4.2) rect([0.8,9.2]);
+	    right(4.2) rect([0.8,9.2]);
+	    fwd(4.2) zrot(90) rect([0.8,9.2]);
+    }
+}
 module top_case(){
     color("red")
     difference(){
