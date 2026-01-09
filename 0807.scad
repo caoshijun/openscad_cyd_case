@@ -6,7 +6,7 @@ $fn=$preview?32:64;
 
 pcbl=98;
 pcbw=26;
-pcbh=10;
+pcbh=12;
 
 ledbd_tks=1.5;
 grid_tks=2.2;
@@ -33,23 +33,24 @@ snip_depth=0.4;
 R=2;                     // 圆角
 C=0.8;                     // 倒角
 L =pcbl+2*wallx+2*gapx;  //外壳总长
-L1=pcbl+wallx+gapx;  //上下壳子交叉
+L1=pcbl+wallx+2*gapx;  //上下壳子交叉
 L2=pcbl+2*gapx;          //放置灯板,预留gapx尺寸
 L3=pcbl-2;               //灯板对外显示长度
 
 W =pcbw+2*wally+2*gapy;  //外壳总宽
-W1=pcbw+wally+gapy;  //上下壳子交叉
+W1=pcbw+wally+2*gapy;  //上下壳子交叉
 W2=pcbw+2*gapy;          //放置灯板,预留gapy尺寸
 W3=pcbw-2;               //灯板对外显示宽度
 
-pinlength=pcbh-(mask_tks+acl_tks+pet_tks+grid_tks+ledbd_tks+gapz+esp32_tks);
-echo(pinlength=pinlength);
+boxheight=mask_tks+acl_tks+pet_tks+grid_tks+ledbd_tks+gapz+esp32_height;
+echo(boxlength=boxheight);
 
-H =pcbh+wallz+gapz;
+H =pcbh;
+H1=H-wallz;
+H2=H-mask_tks;
 H3=mask_tks;
-H1=wallz+gapz;
-H2=H-H3;
 H4=mask_tks+acl_tks+pet_tks+grid_tks+ledbd_tks+gapz;  //嵌入esp32板子的高度
+espbd_lct_height=mask_tks+acl_tks+pet_tks+grid_tks+ledbd_tks+gapz;  //嵌入esp32板子的高度
 echo(mask_tks,acl_tks,pet_tks,ledbd_tks,gapz);  //嵌入esp32板子的高度
 
 is_left_half=false;
@@ -65,6 +66,8 @@ isdrawtopside=true;
 //上盖打开后距离底盒
 shift=20;
 yshift=10;
+
+eps=0.001;
 
 echo(L=L,L1=L1,L2=L2,L3=L3);
 echo(W=W,W1=W1,W2=W2,W3=W3);
@@ -82,6 +85,19 @@ module teardrop_round_rect(L,W,R,d_tube){
     path_sweep(vnf, path, closed=true);
 }
 
+module mirror_copy(v = [0, 1, 0]) {
+    children();
+    mirror(v) children();
+}
+
+module ldr_hole(){
+        cuboid([5.6,2.3,4.6],rounding=2.3,edges=[TOP+LEFT,BOT+LEFT,TOP+RIGHT,BOT+RIGHT],anchor=BOT+BACK);
+}
+
+module powerline_hole(){
+    xcyl(l=2.3, d=3, chamfer=-0.6,anchor=BOT+RIGHT);
+}
+
 module top_case(){
     color("gray")
     difference(){
@@ -89,27 +105,33 @@ module top_case(){
             drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
             union(){
-                grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H-H4,d=2.6,chamfer1=-1.6,chamfer2=0.4,anchor=BOT);   //四个支撑柱
+                grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H-espbd_lct_height,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
                 rect_tube(h=lidheight, size=[L,W], isize=[L1,W1],rounding=R,irounding=R/2,$fn=32,anchor=BOT);
                 up(lidheight-snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth);
             }
        }
-        move([25,0,0]) grid_copies([3,3], n=[5,5]) cube(2);  //散热孔
+        grid_copies([3,3], n=[30,6]) cuboid(2,anchor=BOT);  //散热孔
+        move([-35,W2/2+2.3,H-H4-0.2-4.6+wallz+gapz]) ldr_hole();
+        #move([L2/2+2.3,0,wallz+gapz])powerline_hole();
     }
 }
 
 module base_case(){
-    color("red")
+//    color("red")
     difference(){
         union(){
             drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
-            up(wallz) rect_tube(h=H2-wallz, size=[L,W], isize=[L2,W2],rounding=R,$fn=32,anchor=BOT);
+            //up(wallz) cuboid([L,W,H1],rounding=R,edges="Z",anchor=BOT);  //加底面总高为H
+            up(wallz) rect_tube(h=H1, size=[L,W],isize=[L2,W2],rounding=R,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
        }
-        up(pcbh+wallz-lidheight) rect_tube(h=lidheight, size=[L,W],isize=[L1,W1],rounding=R,$fn=32,anchor=BOT); //圆角矩形圈切出交叉区
-        up(H+wallz-gapz-lidheight) rect_tube(h=lidheight, size1=[L,W],size2=[L1+1.4,W1+1.4],rounding=R,irounding=R,wall=1,$fn=32,anchor=BOT); //交叉区铲出斜坡
-        up(H-wallz-gapz-lidheight+snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth); //在交叉带上挖槽用于上盒嵌入
-        cuboid([L3,W3,H3],anchor=BOT);
-        
+        up(mask_tks) cuboid([L2,W2,H2+eps],anchor=BOT);  //挖出pcb放置尺寸
+        down(eps) cuboid([L3,W3,H3+2*eps],rounding=R,edges="Z",anchor=BOT); //挖出像素屏外漏区域
+        mirror_copy() move([0,W2/2,espbd_lct_height])cuboid([56,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD); //esp32板子嵌入
+        up(H-lidheight) rect_tube(h=lidheight, size=[L,W],isize=[L1,W1],rounding=R,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
+        up(H-lidheight) rect_tube(h=lidheight, size1=[L+1,W+1],size2=[L1+1.4,W1+1.4],rounding=R,wall=1,$fn=32,anchor=BOT); //交叉区铲出斜坡
+        up(H-lidheight+snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth); //在交叉带上挖槽用于上盒嵌入
+        move([-35,-W2/2,H4+0.2]) ldr_hole();
+        move([L/2+eps,0,H-3]) powerline_hole();
     }
 }
 module conditional_half(cond, plane, children) {
@@ -130,10 +152,14 @@ conditional_half(is_bottom_half, DOWN)
 union(){
 if (isdrawlid) {
     if (isdrawtopside) back(shift+W) top_case();
-    else up(2*wallz+2*gapz+pcbh+yshift) yrot(180)  top_case();
+    else up(wallz+gapz+pcbh+yshift) xrot(180)  top_case();
 }
 if (isdrawbase) base_case();
 }
+
+
+
+
 
 
 
