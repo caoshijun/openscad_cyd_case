@@ -50,7 +50,7 @@ H1=H-wallz;
 H2=H-mask_tks;
 H3=mask_tks;
 H4=mask_tks+acl_tks+pet_tks+grid_tks+ledbd_tks+gapz;  //嵌入esp32板子的高度
-espbd_lct_height=mask_tks+acl_tks+pet_tks+grid_tks+ledbd_tks+gapz;  //嵌入esp32板子的高度
+H5=H-H4;
 echo(mask_tks,acl_tks,pet_tks,ledbd_tks,gapz);  //嵌入esp32板子的高度
 
 is_left_half=false;
@@ -71,7 +71,7 @@ eps=0.001;
 
 echo(L=L,L1=L1,L2=L2,L3=L3);
 echo(W=W,W1=W1,W2=W2,W3=W3);
-echo(H=H,H1=H1,H2=H2,H3=H3,H4=H4,H5=H-H4);
+echo(H=H,H1=H1,H2=H2,H3=H3,H4=H4,H5=H5);
 
 //画盒子同时做Z轴rouding和底面chamfer
 module drawbox(L,W,H,R,C){
@@ -105,14 +105,14 @@ module top_case(){
             drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
             union(){
-                grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H-espbd_lct_height,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
-                rect_tube(h=lidheight, size=[L,W], isize=[L1,W1],rounding=R,irounding=R/2,$fn=32,anchor=BOT);
+                grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H5,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
+                rect_tube(h=lidheight, size=[L,W], isize=[L1+0.4,W1+0.4],rounding=R,irounding=R,$fn=32,anchor=BOT);
                 up(lidheight-snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth);
             }
        }
         grid_copies([3,3], n=[30,6]) cuboid(2,anchor=BOT);  //散热孔
-        move([-35,W2/2+2.3,H-H4-0.2-4.6+wallz+gapz]) ldr_hole();
-        #move([L2/2+2.3,0,wallz+gapz])powerline_hole();
+        move([-35,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();
+        move([L2/2+2.3,0,wallz+gapz])powerline_hole();
     }
 }
 
@@ -126,12 +126,12 @@ module base_case(){
        }
         up(mask_tks) cuboid([L2,W2,H2+eps],anchor=BOT);  //挖出pcb放置尺寸
         down(eps) cuboid([L3,W3,H3+2*eps],rounding=R,edges="Z",anchor=BOT); //挖出像素屏外漏区域
-        mirror_copy() move([0,W2/2,espbd_lct_height])cuboid([56,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD); //esp32板子嵌入
+        mirror_copy() move([0,W2/2,H4])cuboid([56,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //esp32板子嵌入
         up(H-lidheight) rect_tube(h=lidheight, size=[L,W],isize=[L1,W1],rounding=R,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
         up(H-lidheight) rect_tube(h=lidheight, size1=[L+1,W+1],size2=[L1+1.4,W1+1.4],rounding=R,wall=1,$fn=32,anchor=BOT); //交叉区铲出斜坡
         up(H-lidheight+snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth); //在交叉带上挖槽用于上盒嵌入
         move([-35,-W2/2,H4+0.2]) ldr_hole();
-        move([L/2+eps,0,H-3]) powerline_hole();
+        move([L/2,0,H-3]) powerline_hole();
     }
 }
 module conditional_half(cond, plane, children) {
@@ -156,10 +156,6 @@ if (isdrawlid) {
 }
 if (isdrawbase) base_case();
 }
-
-
-
-
 
 
 
