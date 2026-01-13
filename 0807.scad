@@ -1,7 +1,3 @@
-
-
-
-
 include <BOSL2/std.scad>
 
 $fs=$preview?1:0.4; 
@@ -34,7 +30,7 @@ gapz=0.2;
 
 lidheight=2;
 snip_depth=0.4;
-R=2;                     // 圆角
+R=3;                     // 圆角
 C=0.8;                     // 倒角
 L =pcbl+2*wallx+2*gapx;  //外壳总长
 L1=pcbl+wallx+2*gapx;  //上下壳子交叉
@@ -90,7 +86,7 @@ module mirror_copy(v = [0, 1, 0]) {
 }
 
 module ldr_hole(){
-        cuboid([5.6,2.3+2*eps,4.6],rounding=2.3,edges=[TOP+LEFT,BOT+LEFT,TOP+RIGHT,BOT+RIGHT],anchor=BOT+BACK);
+        cuboid([5.4,2.3+2*eps,4.6],rounding=2.3,edges=[TOP+LEFT,BOT+LEFT,TOP+RIGHT,BOT+RIGHT],anchor=BOT+BACK);
 }
 
 module powerline_hole(){
@@ -101,23 +97,23 @@ module top_case(){
     color("gray")
     difference(){
         union(){
-            drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
+            drawbox(L,W,wallz,R,1);  //上盖底层带倒脚
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
             union(){
-                grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H5,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
-                mirror_copy() xcopies(30,n=3) move([0,W2/2-wally/2,0])  //两侧6个卡扣
+                grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H5-0.8-2,d=4,chamfer1=-1.6,chamfer2=0.4,anchor=BOT) position(TOP)  cyl(h=2,d=2.6,chamfer2=0.4,anchor=BOT);  //四个支撑柱
+                mirror_copy() xcopies([-38,-12,12,38]) move([0,W2/2-wally/2,0])  //两侧6个卡扣
                 union(){
-                    cuboid([5,2,4.6],chamfer=-1,edges=BOT,except=BOT+BACK,anchor=BOT);
-                    move([0,1,1])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT);          
+                    cuboid([5,2,4.6],chamfer=-1.6,edges=BOT,except=BOT+BACK,anchor=BOT);
+                    move([0,1,0.6])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT);          
                 }
                 move([-L2/2+wallx/2,0,0]) union(){
-                    cuboid([2,5,4.6],chamfer=-1,edges=BOT,except=BOT+LEFT,anchor=BOT);
-                    move([-1,0,1])cuboid([0.8,5,3.6],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+BOT);  //单侧卡扣
+                    cuboid([2,5,4.6],chamfer=-1.6,edges=BOT,except=BOT+LEFT,anchor=BOT);
+                    move([-1,0,0.6])cuboid([0.8,5,3.6],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+BOT);  //单侧卡扣
                 }
             }
        }
         grid_copies([3,3], n=[30,6]) cuboid(2,anchor=BOT);  //散热孔
-        move([-37,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();  //光线传感器
+        move([-30,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();  //光线传感器
         move([L2/2+2.3,0,wallz+gapz-0.2])powerline_hole();     //电源线孔
     }
 }
@@ -127,15 +123,14 @@ module base_case(){
     difference(){
         union(){
             drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
-            //up(wallz) cuboid([L,W,H1],rounding=R,edges="Z",anchor=BOT);  //加底面总高为H
-            up(wallz) rect_tube(h=H1, size=[L,W],isize=[L2,W2],rounding=R,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
+            up(wallz) rect_tube(h=H1, size=[L,W],isize=[L2,W2],rounding=R,irounding=R-wallx,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
        }
-        up(mask_tks) cuboid([L2,W2,H2+eps],anchor=BOT);  //挖出pcb放置尺寸
-        down(eps) cuboid([L3,W3,H3+2*eps],rounding=R,edges="Z",anchor=BOT); //挖出像素屏外漏区域
-        mirror_copy() move([0,W2/2,H4])cuboid([52,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //esp32板子嵌入
-        mirror_copy() xcopies(30, n=3)  move([0,W2/2,H4+2])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //卡扣
-        move([-L2/2,0,H4+2]) cuboid([0.8,5,3.6],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+BOT);    //卡扣
-        move([-37,-W2/2+eps,H4+0.2]) ldr_hole();
+        up(mask_tks) cuboid([L2,W2,H2+eps],rounding=R-wallx,edges="Z",anchor=BOT);  //挖出pcb放置尺寸
+        down(eps) cuboid([L3,W3,H3+2*eps],rounding=R-wallx,edges="Z",anchor=BOT); //挖出像素屏外漏区域
+        mirror_copy() move([0,W2/2,H4]) cuboid([52,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //esp32板子嵌入
+        mirror_copy() xcopies([-38,-12,12,38])  move([0,W2/2,H4+2+0.8])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //卡扣
+        move([-L2/2,0,H4+2+0.8]) cuboid([0.8,5,3.6],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+BOT);    //卡扣
+        move([-30,-W2/2+eps,H4+0.2]) ldr_hole();
         move([L/2+eps,0,H-3+0.2]) powerline_hole();
     }
 }
