@@ -6,7 +6,7 @@ $fn=$preview?32:64;
 
 pcbl=98;
 pcbw=26;
-pcbh=12;
+pcbh=13;
 
 ledbd_tks=1.5;
 grid_tks=2.2;
@@ -79,11 +79,6 @@ module drawbox(L,W,H,R,C){
     offset_sweep(roundrect2d, h=H, bottom=os_chamfer(C),anchor=BOT);
 }
 
-module teardrop_round_rect(L,W,R,d_tube){
-    path=rect([L, W], rounding=R);
-    vnf=teardrop2d(r=d_tube,bot_corner=0.4);
-    path_sweep(vnf, path, closed=true);
-}
 
 module mirror_copy(v = [0, 1, 0]) {
     children();
@@ -99,15 +94,18 @@ module powerline_hole(){
 }
 
 module top_case(){
-    color("gray")
+    //color("gray")
     difference(){
         union(){
             drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
             union(){
                 grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H5,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
-                rect_tube(h=lidheight, size=[L,W], isize=[L1+0.4,W1+0.4],rounding=R,irounding=R,$fn=32,anchor=BOT);
-                up(lidheight-snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth);
+                mirror_copy() xcopies(35,n=3) move([0,14,0])
+                union(){
+                    cuboid([10,4,4.6],anchor=BOT);
+                    move([0,2,1])cuboid([10,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT);
+                }
             }
        }
         grid_copies([3,3], n=[30,6]) cuboid(2,anchor=BOT);  //散热孔
@@ -127,9 +125,10 @@ module base_case(){
         up(mask_tks) cuboid([L2,W2,H2+eps],anchor=BOT);  //挖出pcb放置尺寸
         down(eps) cuboid([L3,W3,H3+2*eps],rounding=R,edges="Z",anchor=BOT); //挖出像素屏外漏区域
         mirror_copy() move([0,W2/2,H4])cuboid([56,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //esp32板子嵌入
-        up(H-lidheight) rect_tube(h=lidheight, size=[L,W],isize=[L1,W1],rounding=R,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
-        up(H-lidheight) rect_tube(h=lidheight, size1=[L+1,W+1],size2=[L1+1.4,W1+1.4],rounding=R,wall=1,$fn=32,anchor=BOT); //交叉区铲出斜坡
-        up(H-lidheight+snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth); //在交叉带上挖槽用于上盒嵌入
+        mirror_copy() xcopies(35, n=3)  move([0,W2/2,H4+2])cuboid([10,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //卡扣
+//        up(H-lidheight) rect_tube(h=lidheight, size=[L,W],isize=[L1,W1],rounding=R,$fn=16,anchor=BOT); //圆角矩形圈切出上下盖子交叉区
+//        up(H-lidheight) rect_tube(h=lidheight, size1=[L+1,W+1],size2=[L1+1.4,W1+1.4],rounding=R,wall=1,$fn=32,anchor=BOT); //交叉区铲出斜坡
+//        up(H-lidheight+snip_depth/2) teardrop_round_rect(L1+snip_depth/2,W1+snip_depth/2,R,snip_depth); //在交叉带上挖槽用于上盒嵌入
         move([-35,-W2/2,H4+0.2]) ldr_hole();
         move([L/2,0,H-3]) powerline_hole();
     }
@@ -154,7 +153,7 @@ if (isdrawlid) {
     if (isdrawtopside) back(shift+W) top_case();
     else up(wallz+gapz+pcbh+yshift) xrot(180)  top_case();
 }
-if (isdrawbase) base_case();
+//if (isdrawbase) base_case();
 }
 
 
