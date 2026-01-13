@@ -1,3 +1,7 @@
+
+
+
+
 include <BOSL2/std.scad>
 
 $fs=$preview?1:0.4; 
@@ -94,14 +98,14 @@ module powerline_hole(){
 }
 
 module top_case(){
-    //color("gray")
+    color("gray")
     difference(){
         union(){
             drawbox(L,W,wallz,R,C);  //上盖底层带倒脚
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
             union(){
                 grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H5,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
-                mirror_copy() xcopies(35,n=3) move([0,14,0])
+                mirror_copy() xcopies(35,n=3) move([0,W2/2-2,0])
                 union(){
                     cuboid([10,4,4.6],anchor=BOT);
                     move([0,2,1])cuboid([10,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT);
@@ -109,8 +113,8 @@ module top_case(){
             }
        }
         grid_copies([3,3], n=[30,6]) cuboid(2,anchor=BOT);  //散热孔
-        move([-35,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();
-        move([L2/2+2.3,0,wallz+gapz])powerline_hole();
+        move([-35,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();  //光线传感器
+        move([L2/2+2.3,0,wallz+gapz])powerline_hole();     //电源线孔
     }
 }
 
@@ -153,7 +157,7 @@ if (isdrawlid) {
     if (isdrawtopside) back(shift+W) top_case();
     else up(wallz+gapz+pcbh+yshift) xrot(180)  top_case();
 }
-//if (isdrawbase) base_case();
+if (isdrawbase) base_case();
 }
 
 
