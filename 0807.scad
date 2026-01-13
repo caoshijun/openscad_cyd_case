@@ -1,3 +1,7 @@
+
+
+
+
 include <BOSL2/std.scad>
 
 $fs=$preview?1:0.4; 
@@ -101,7 +105,7 @@ module top_case(){
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap
             union(){
                 grid_copies([esp32_lct_l,esp32_lct_w], n=[2,2]) cyl(h=H5,d=2.6,chamfer1=-0.8,chamfer2=0.4,anchor=BOT);   //四个支撑柱
-                mirror_copy() xcopies(32,n=3) move([0,W2/2-wally/2,0])  //两侧6个卡扣
+                mirror_copy() xcopies(30,n=3) move([0,W2/2-wally/2,0])  //两侧6个卡扣
                 union(){
                     cuboid([5,2,4.6],chamfer=-1,edges=BOT,except=BOT+BACK,anchor=BOT);
                     move([0,1,1])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT);          
@@ -113,7 +117,7 @@ module top_case(){
             }
        }
         grid_copies([3,3], n=[30,6]) cuboid(2,anchor=BOT);  //散热孔
-        move([-40,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();  //光线传感器
+        move([-37,W2/2+2.3,H5-0.2-4.6+wallz+gapz]) ldr_hole();  //光线传感器
         move([L2/2+2.3,0,wallz+gapz-0.2])powerline_hole();     //电源线孔
     }
 }
@@ -129,9 +133,9 @@ module base_case(){
         up(mask_tks) cuboid([L2,W2,H2+eps],anchor=BOT);  //挖出pcb放置尺寸
         down(eps) cuboid([L3,W3,H3+2*eps],rounding=R,edges="Z",anchor=BOT); //挖出像素屏外漏区域
         mirror_copy() move([0,W2/2,H4])cuboid([52,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //esp32板子嵌入
-        mirror_copy() xcopies(32, n=3)  move([0,W2/2,H4+2])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //卡扣
+        mirror_copy() xcopies(30, n=3)  move([0,W2/2,H4+2])cuboid([5,0.8,3.6],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT); //卡扣
         move([-L2/2,0,H4+2]) cuboid([0.8,5,3.6],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+BOT);    //卡扣
-        move([-40,-W2/2+eps,H4+0.2]) ldr_hole();
+        move([-37,-W2/2+eps,H4+0.2]) ldr_hole();
         move([L/2+eps,0,H-3+0.2]) powerline_hole();
     }
 }
