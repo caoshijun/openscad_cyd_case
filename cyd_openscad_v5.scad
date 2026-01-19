@@ -14,7 +14,7 @@ is_bottom_half=false;
 // 定义尺寸PCB长宽高
 length=86;
 width=50;
-height=12;
+height=10;
 //pcb和盒子壁之间的间隙
 gapx=1;
 gapy=1;
@@ -87,13 +87,20 @@ W  = width + 2*gapy + 2*wally;
 W1 = width + 2*wally + wally/5; 
 W2 = width + 2*gapy; 
 
-H  = height +2*gapz + 2*wallz;  //整体最大高度，上下壳子相加
-H1 = screen_mask_thickness+screen_height+pcb_thickness+gapz;   //下壳的高度
-H2 = 3;                   //上下壳交叉部分高度
+snip_height=2.6;
+
+H  = height +2*gapz + 2*wallz;                                      //整体最大高度，上下壳子相加
+H1 = screen_mask_thickness+screen_height+pcb_thickness+gapz+1.5;        //下壳的总高度
+H11= H1-wallz-gapz-snip_height;                                     //下壳管状拉升高度
+
+H_pcb_lo=screen_mask_thickness+screen_height;
+H_pcb_hi=screen_mask_thickness+screen_height+pcb_thickness;
+H2 = H-H1;                                                          //上壳总高度
+H21= H2-wallz-gapz;                                     //上壳管状拉升高度
 
 echo(L=L,L1=L1,L2=L2);
 echo(W=W,W1=W1,W2=W2);
-echo(H=H,H1=H1,H2=H2);
+echo(H=H,H1=H1,H11=H11,H2=H2,H21=H21);
 
 R=roundsize;
 BR=chamfersize;
@@ -104,20 +111,42 @@ module drawbox(L,W,H,R,BR){
     offset_sweep(roundrect2d, h=H, bottom=os_chamfer(BR),anchor=BOT);
 }
 
+module mirror_copy(v = [0, 1, 0]) {
+    children();
+    mirror(v) children();
+}
+
+
+
 module top_case(){
     drawbox(L,W,wallz,R,BR);  //上盖底层带倒脚
-    up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) //gap  
-    grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) tube(h=H-H1,od=support_pin_d1,id=support_pin_d3,ichamfer2=0.4,ochamfer1=-1.6,anchor=BOT);   //四个支撑柱
+    up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) 
+    grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) tube(h=H_pcb_lo-wallz-gapz,od=support_pin_d1,id=support_pin_d3,ichamfer2=0.4,ochamfer1=-1.6,anchor=BOT);   //四个支撑柱
     if (isdrawled) move([led_p_x,led_p_y,0]) cuboid([led_l+1.2,led_w+1.2,H-H1],chamfer=-1.6,edges=BOT,anchor=BOT);  //LED屏蔽外壳
-
+    up(wallz+gapz) 
+        rect_tube(h=H21, size=[L,W],isize=[L2,W2],rounding=R,irounding=R-wallx,$fn=32,anchor=BOT) position(TOP) 
+        union(){ 
+            rect_tube(h=snip_height, size=[L,W],isize=[L1,W1],rounding=R,irounding=R-wallx/2,$fn=32,anchor=BOT) position(BOT) 
+            mirror_copy() xcopies([-30,-15,0,15,30])  move([0,-W1/2,snip_height]) cuboid([5,0.8,2],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+TOP);   //卡扣X方向
+            #mirror_copy([1,0,0]) ycopies([-15,0,15]) move([L1/2,0,snip_height])  cuboid([0.8,5,2],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+TOP);  //卡扣Y方向
+        }
 }
 
 module base_case(){
     drawbox(L,W,wallz,R,BR);  //basewall
-    up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP)  
-    grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) cyl(h=H1-pcb_thickness-wallz-gapz,d=support_pin_d1,chamfer1=-1.6,anchor=BOT) position(TOP) 
-    cyl(h=pcb_thickness+(H-H1),d=support_pin_d2,chamfer1=-0.4,chamfer2=0.4,anchor=BOT);  //支撑柱及定位孔
+    up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) 
+    grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) cyl(h=H_pcb_lo-wallz-gapz,d=support_pin_d1,chamfer1=-1.6,anchor=BOT) position(TOP) 
+    cyl(h=pcb_thickness+3,d=support_pin_d2,chamfer1=-0.4,chamfer2=0.4,anchor=BOT);  //支撑柱及定位孔
     if (isdrawldr){ move([ldr_p_x,ldr_p_y,0]) cuboid([ldr_l+1.2,ldr_w+1.2,H1],chamfer=-1.6,edges=BOT,anchor=BOT);}  //LDR传感器屏蔽外壳    
+    up(wallz+gapz) union(){
+        rect_tube(h=H11, size=[L,W],isize=[L2,W2],rounding=R,irounding=R-wallx,$fn=32,anchor=BOT) position(TOP) 
+        difference(){
+            rect_tube(h=snip_height, size=[L1,W1],isize=[L2,W2],rounding=R,irounding=R-wallx/2,$fn=32,anchor=BOT);
+            mirror_copy() xcopies([-30,-15,0,15,30])  move([0,-W1/2,0])cuboid([5,0.8,2],chamfer=0.8,edges=[BACK+TOP,BACK+BOT],anchor=FWD+BOT);  //卡扣Y方向
+            mirror_copy([1,0,0]) ycopies([-15,0,15]) move([L1/2,0,0]) cuboid([0.8,5,2],chamfer=0.8,edges=[LEFT+TOP,LEFT+BOT],anchor=RIGHT+BOT);    //卡扣X方向
+        }
+    }
+
 }
 
 module conditional_half(cond, plane, children) {
