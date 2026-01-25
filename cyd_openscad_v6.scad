@@ -143,9 +143,9 @@ module drawbox(L,W,H,R,BR){
     offset_sweep(roundrect2d, h=H, bottom=os_chamfer(BR),anchor=BOT);
 }
 
-module button2d(){
-    move([31.6,-19,(wallz+gapz)/2])
-    linear_extrude(wallz+gapz+3,center=true)
+module button2d(button_h){
+    move([31.6,-19,button_h/2])
+    linear_extrude(button_h+3,center=true)
     union(){
         rect([0.8,9.2])
         left(4.2) rect([0.8,9.2]);
@@ -156,18 +156,19 @@ module button2d(){
 }
 
 module button_text(){
-    move([33.6,-19,0.1])xrot(180)text3d("R",font="Arial:style=Bold", h=0.26+eps,size=3,anchor=BOT);
-    move([29.4,-19,0.1])xrot(180)text3d("B",font="Arial:style=Bold", h=0.26+eps,size=3,anchor=BOT); 
+    move([33.6,-18.2,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT);
+    move([29.4,-18.2,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT); 
+
 }
 
 module logo_text(){
     //move([35,0,0.1])zrot(90) xrot(180)text3d(logo_text,font="Arial:style=Bold", h=0.2+eps,size=8,anchor=BOT);
-    move([35,0,-0.16]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=8,anchor=BOT);
+    move([35,0,0]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=8,anchor=BOT);
 
 }
 
 module base_case(){
-    recolor("red") logo_text();
+    recolor("red") down(0.01) logo_text();
     recolor("gray") difference(){
         union(){
             drawbox(L,W,wallz,R,BR);  //basewall
@@ -197,16 +198,23 @@ module base_case(){
 }
 
 module top_case(){
-    recolor("red") button_text();
+    //top_adj=wallz+gapz;
+    top_adj=0.8;
+    recolor("red") down(0.01) button_text();
     recolor("gray") difference(){
         union(){
-            drawbox(L,W,wallz,R,BR);  //上盖底层带倒脚
-            up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP) 
-            union(){
-                grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) tube(h=H-H_pcb_hi-wallz-gapz,od=support_pin_d1,id=support_pin_d3,ichamfer2=0.4,ochamfer1=-1.6,anchor=BOT);   //四个支撑柱
-                if (isdrawled) move([led_p_x,led_p_y,0]) cuboid([led_l+1.2,led_w+1.2,H-H_pcb_hi-wallz-gapz-1],chamfer=-1.6,edges=BOT,anchor=BOT);  //LED屏蔽外壳
-                move([29.6,-20,0])cuboid([3.4,6,H-11]); //boot
-                move([33.6,-20,0])cuboid([3.4,6,H-11]); //reset
+             difference(){
+                union(){
+                    drawbox(L,W,wallz,R,BR);  //上盖底层带倒脚
+                    up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT);// position(TOP) 
+                }
+                up(top_adj) cuboid([L2,W2,wallz+gapz],rounding=R-wallx,edges="Z",anchor=BOT);
+            } 
+            up(top_adj-0.1) union(){
+                grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) tube(h=H-H_pcb_hi-top_adj+0.1,od=support_pin_d1,id=support_pin_d3,ichamfer2=0.4,ochamfer1=-1.6,anchor=BOT);   //四个支撑柱
+                if (isdrawled) move([led_p_x,led_p_y,0]) cuboid([led_l+1.2,led_w+1.2,H-H_pcb_hi-top_adj-1],chamfer=-1.6,edges=BOT,anchor=BOT);  //LED屏蔽外壳
+                move([29.6,-20,0])cuboid([3.4,6,H-top_adj-screen_mask_thickness-height],anchor=BOT); //boot
+                move([33.6,-20,0])cuboid([3.4,6,H-top_adj-screen_mask_thickness-height],anchor=BOT); //reset
             }
             up(wallz+gapz) rect_tube(h=H21, size=[L,W],isize=[L2,W2],rounding=R,irounding=R-wallx,$fn=32,anchor=BOT) position(TOP) 
                 union(){ 
@@ -218,12 +226,12 @@ module top_case(){
      //卡扣Y方向
                 }
             } 
-        if (isdrawled) {move([led_p_x,led_p_y,0.4]) cuboid([led_l,led_w,H-H_pcb_hi-wallz-gapz+eps],anchor=BOT);}  //LED屏蔽外壳挖坑
-        if (isdrawspk) {move([-15.6,-22.5,-0.001]) cuboid([8,4.5,wallz+gapz+2*eps],anchor=BOT);}  //speaker
-        move([25,0,-0.001])   grid_copies([3,3], n=[5,5]) cube([2,2,wallz+gapz+2*eps]);  //散热孔
-        move([-6,18,-0.001])  grid_copies([3,3], n=[4,4]) cube([2,2,wallz+gapz+2*eps]);  //sdcard 散热孔
+        if (isdrawled) {move([led_p_x,led_p_y,0.4]) cuboid([led_l,led_w,H-H_pcb_hi-top_adj+eps],anchor=BOT);}  //LED屏蔽外壳挖坑
+        if (isdrawspk) {move([-15.6,-22.5,-0.001]) cuboid([8,4.5,top_adj+2*eps],anchor=BOT);}  //speaker
+        move([25,0,-0.001])   grid_copies([3,3], n=[5,5]) cube([2,2,top_adj+2*eps]);  //散热孔
+        move([-6,18,-0.001])  grid_copies([3,3], n=[4,4]) cube([2,2,top_adj+2*eps]);  //sdcard 散热孔
         //move([-13,16,0])  grid_copies([3,3], n=[14,6]) cube(2);  //散热孔
-        button2d();
+        button2d(top_adj);
         up(H1+H2) yrot(180)
             union(){
                 microtypec();
@@ -248,7 +256,7 @@ conditional_half(is_back_half  , BACK)
 conditional_half(is_top_half   , UP)
 conditional_half(is_bottom_half, DOWN)
 
-//union(){
+union(){
 //上盖
 if (isdrawtop) {
     if (isdrawtopside) back(shift+W) top_case();
@@ -257,4 +265,4 @@ if (isdrawtop) {
 
 //下盖
 if (isdrawbase) { base_case(); }
-//}
+}
