@@ -31,8 +31,10 @@ isdrawled=true;
 isdrawlogo=true;
 //logo是否分体打印
 islogo_isolate=true;
+//是否打印logo支撑
+isdrawlogosupport=true;
 //logo font size
-fontsize=10; //[6:1:10]
+fontsize=10; //[4:1:10]
 ft_adj_x=0; //[-10:0.1:10]
 //仅当isdrawlogo为true时输入的字符才有效。
 logo_text="CYD";
@@ -160,8 +162,8 @@ module button2d(button_h){
 }
 
 module button_text(){
-    move([33.6,-18.2,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial", h=0.2+eps,size=4,anchor=BOT);
-    move([29.4,-18.2,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial", h=0.2+eps,size=4,anchor=BOT); 
+    move([33.6,-17.6,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial", h=0.2+eps,size=4,anchor=BOT);
+    move([29.4,-17.6,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial", h=0.2+eps,size=4,anchor=BOT); 
     //move([33.6,-18.2,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT);
     //move([29.4,-18.2,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT); 
 
@@ -208,7 +210,7 @@ module base_case(){
         if (isdrawsdcard) {move([4.8,W2/2-eps,H_pcb_hi])cuboid([15.6,wally+2*eps,3.2],anchor=FWD+BOT); } //sdcard
         if (isdrawtemphum) {move([-12,W2/2-eps,H_pcb_hi])cuboid([8,wally+2*eps,4],anchor=FWD+BOT);  } //temp_hum_interface
         if (isdrawextio) {move([-28,W2/2-eps,H_pcb_hi])cuboid([8,wally+2*eps,4],anchor=FWD+BOT);  } //Ext IO
-        if (isdrawlogo && islogo_isolate ) {move([L2/2-7,0,-eps]) mylogo(12,35+eps,screen_height+0.4,3.2,2.4,screen_height+2*eps);} else if (isdrawlogo) {logo_text();}
+        if (isdrawlogo && islogo_isolate ) {move([L2/2-7,0,-eps]) mylogo(12,35+eps,screen_height+screen_mask_thickness+0.4,3.2,2.4,screen_height+screen_mask_thickness+2*eps);} else if (isdrawlogo) {logo_text();}
         }
 
 }
@@ -283,11 +285,13 @@ if (isdrawbase) { base_case(); }
 //logo
 if (isdrawlogo) {
     if (islogo_isolate) { 
-        right(W) up(0.6) xrot(180) mylogo(12,35,screen_mask_thickness,3.2,2.4,screen_mask_thickness-0.4,fs=fontsize,logo=true);  //logo pad
-        right(W+15) up(screen_height) xrot(180) 
-            difference(){
-                mylogo(12,35,screen_height,3.2,2.4,screen_height);
-                move([-6,0,-eps]) cuboid([12,35+eps,screen_height+2*eps],anchor=BOT);
+        right(W) up(screen_mask_thickness) xrot(180) mylogo(12,35,screen_mask_thickness,3,2.2,screen_mask_thickness-0.4,fs=fontsize,logo=true);  //logo pad
+        if (isdrawlogosupport) {
+            right(W+15) up(screen_height-0.4) xrot(180) 
+                difference(){
+                    mylogo(12,35,screen_height-0.4,2.8,2.0,screen_height-0.4);
+                    move([-6,0,-eps]) cuboid([12,35+eps,screen_height-0.4+2*eps],anchor=BOT);
+               }
             }
         }
     }
