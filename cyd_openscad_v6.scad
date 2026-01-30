@@ -29,6 +29,11 @@ isdrawldr=true;
 isdrawled=true;
 //是否打印logo
 isdrawlogo=true;
+//logo是否分体打印
+islogo_isolate=true;
+//logo font size
+fontsize=10; //[6:1:10]
+ft_adj_x=0; //[-10:0.1:10]
 //仅当isdrawlogo为true时输入的字符才有效。
 logo_text="CYD";
 //显示屏厚度（测量pcb和屏幕整体厚度然后减去pcb厚度)
@@ -39,7 +44,7 @@ pcb_thickness=1.5;          //[0.8:0.1:3]
 //显示屏左右距离调整
 screen_adj_x=8.6;           //[6:0.1:10]
 //遮蔽显示屏部分厚度
-screen_mask_thickness=0.6;  //[0.2:0.1:1]
+screen_mask_thickness=0.8;  //[0.2:0.1:1]
 
 /* [其它参数] */
 // 定义尺寸PCB长宽高
@@ -163,17 +168,17 @@ module button_text(){
 }
 
 module logo_text(){
-    move([35,0,0]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=8,anchor=BOT);
+    color("red") move([32+ft_adj_x,0,0]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=fontsize,anchor=BOT);
 
 }
 
-module mylogo(L=10,W=30,H=0.6,snip_l=3,snip_w=2,snip_h=0.2){
+module mylogo(L=10,W=30,H=0.6,snip_l=3,snip_w=2,snip_h=0.2,fs=10,logo=false){
         cuboid([L,W,H],rounding=3,edges="Z",anchor=BOT);
         ycopies([-(W/2-snip_l),0,W/2-snip_l])translate([L/2,0,H-snip_h]) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
-        mirror([1,0,0]) ycopies([-(W/2-snip_l),0,W/2-snip_l])translate([L/2,0,0]) up(H-snip_h) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
+        mirror([1,0,0]) ycopies([-(W/2-snip_l),0,W/2-snip_l])translate([L/2,0,H-snip_h]) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
         translate([3,W/2,H-snip_h]) zrot(90) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
         mirror([0,1,0])translate([3,W/2,H-snip_h]) zrot(90) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
-        recolor("red") move([-5,0,-0.1]) zrot(90) mirror([0,1,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=snip_h,size=10,anchor=BOT);
+        if (logo) {recolor("red") move([-5+ft_adj_x,0,-0.1]) zrot(90) mirror([0,1,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=snip_h,size=fs,anchor=BOT);}
 }
 
 module base_case(){
@@ -203,8 +208,9 @@ module base_case(){
         if (isdrawsdcard) {move([4.8,W2/2-eps,H_pcb_hi])cuboid([15.6,wally+2*eps,3.2],anchor=FWD+BOT); } //sdcard
         if (isdrawtemphum) {move([-12,W2/2-eps,H_pcb_hi])cuboid([8,wally+2*eps,4],anchor=FWD+BOT);  } //temp_hum_interface
         if (isdrawextio) {move([-28,W2/2-eps,H_pcb_hi])cuboid([8,wally+2*eps,4],anchor=FWD+BOT);  } //Ext IO
-        if (isdrawlogo)  {move([L2/2-7,0,0]) mylogo(12,35,5.4,3.2,2.4,5);} //logo_pad
-    }
+        if (isdrawlogo && islogo_isolate ) {move([L2/2-7,0,-eps]) mylogo(12,35+eps,screen_height+0.4,3.2,2.4,screen_height+2*eps);} else if (isdrawlogo) {logo_text();}
+        }
+
 }
 
 module top_case(){
@@ -274,5 +280,15 @@ if (isdrawtop) {
 //下盖
 if (isdrawbase) { base_case(); }
 
-if (isdrawlogo) right(W) up(0.6) { xrot(180) mylogo(12,35,0.6,3.2,2.4,0.2);} //logo_pad
+//logo
+if (isdrawlogo) {
+    if (islogo_isolate) { 
+        right(W) up(0.6) xrot(180) mylogo(12,35,screen_mask_thickness,3.2,2.4,screen_mask_thickness-0.4,fs=fontsize,logo=true);  //logo pad
+        right(W+15) up(screen_height) xrot(180) 
+            difference(){
+                mylogo(12,35,screen_height,3.2,2.4,screen_height);
+                move([-6,0,-eps]) cuboid([12,35+eps,screen_height+2*eps],anchor=BOT);
+            }
+        }
+    }
 }
