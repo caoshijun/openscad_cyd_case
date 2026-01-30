@@ -7,19 +7,14 @@ $fn=$preview?16:64;
 /* [主要参数] */
 //是否打印底部盒子
 isdrawbase=true;
-
 //是否打印顶部盒子
 isdrawtop=true;    
-
 //是否将顶盖打开在旁边绘制
 isdrawtopside=true;         
-
 //是否打印speaker接口
 isdrawspk=false;  
-
- //是否打印MicroUSB接口
+//是否打印MicroUSB接口
 isdrawmicrousb=true; 
-
 //是否打印uart接口
 isdrawuart=false; 
 //是否打印MicroSD Card
@@ -28,14 +23,18 @@ isdrawsdcard=false;
 isdrawtemphum=false;   
 //是否打印扩展IO接口
 isdrawextio=false;           
-
-isdrawldr=true;             //是否为光线传感器开孔
-isdrawled=true;             //是否为ws2812 LED绘制遮蔽罩
+//是否为光线传感器开孔
+isdrawldr=true;
+//是否为ws2812 LED绘制遮蔽罩
+isdrawled=true;
+//是否打印logo
+isdrawlogo=true;
+//仅当isdrawlogo为true时输入的字符才有效。
 logo_text="CYD";
 //显示屏厚度（测量pcb和屏幕整体厚度然后减去pcb厚度)
 screen_height=4;            //[3:0.1:5]   
 //pcb板厚度
-pcb_thickness=1.5                                                                                                  ;          //[0.8:0.1:3]     
+pcb_thickness=1.5;          //[0.8:0.1:3]     
 //屏幕左侧到板子边缘的距离，用于显示屏幕外漏部分的调整，默认8.6，测量LDR附件区域显示屏至板卡边缘的距离。
 //显示屏左右距离调整
 screen_adj_x=8.6;           //[6:0.1:10]
@@ -113,7 +112,7 @@ H_pcb_lo=screen_mask_thickness+screen_height;
 H_pcb_hi=screen_mask_thickness+screen_height+pcb_thickness;
 
 H  = height +2*gapz + 2*wallz;     //整体最大高度，上下壳子相加
-H1 = H_pcb_hi + 2.8 + eps ;                //下壳的总高度
+H1 = H_pcb_hi + 2.8 + eps ;        //下壳的总高度
 H11= H1-wallz-gapz-snip_height;    //下壳管状拉升高度
 
 
@@ -156,19 +155,29 @@ module button2d(button_h){
 }
 
 module button_text(){
-    move([33.6,-18.2,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT);
-    move([29.4,-18.2,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT); 
+    move([33.6,-18.2,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial", h=0.2+eps,size=4,anchor=BOT);
+    move([29.4,-18.2,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial", h=0.2+eps,size=4,anchor=BOT); 
+    //move([33.6,-18.2,0])zrot(180)mirror([1,0,0])text3d("R",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT);
+    //move([29.4,-18.2,0])zrot(180)mirror([1,0,0])text3d("B",font="Arial:style=Bold", h=0.2+eps,size=4,anchor=BOT); 
 
 }
 
 module logo_text(){
-    //move([35,0,0.1])zrot(90) xrot(180)text3d(logo_text,font="Arial:style=Bold", h=0.2+eps,size=8,anchor=BOT);
     move([35,0,0]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=8,anchor=BOT);
 
 }
 
+module mylogo(L=10,W=30,H=0.6,snip_l=3,snip_w=2,snip_h=0.2){
+        cuboid([L,W,H],rounding=3,edges="Z",anchor=BOT);
+        ycopies([-(W/2-snip_l),0,W/2-snip_l])translate([L/2,0,H-snip_h]) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
+        mirror([1,0,0]) ycopies([-(W/2-snip_l),0,W/2-snip_l])translate([L/2,0,0]) up(H-snip_h) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
+        translate([3,W/2,H-snip_h]) zrot(90) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
+        mirror([0,1,0])translate([3,W/2,H-snip_h]) zrot(90) cuboid([snip_l,snip_w,snip_h],anchor=BOT);   
+        recolor("red") move([-5,0,-0.1]) zrot(90) mirror([0,1,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=snip_h,size=10,anchor=BOT);
+}
+
 module base_case(){
-    recolor("red") down(0.01) logo_text();
+    //if (isdrawlogo) {mylogo();}
     recolor("gray") difference(){
         union(){
             drawbox(L,W,wallz,R,BR);  //basewall
@@ -194,6 +203,7 @@ module base_case(){
         if (isdrawsdcard) {move([4.8,W2/2-eps,H_pcb_hi])cuboid([15.6,wally+2*eps,3.2],anchor=FWD+BOT); } //sdcard
         if (isdrawtemphum) {move([-12,W2/2-eps,H_pcb_hi])cuboid([8,wally+2*eps,4],anchor=FWD+BOT);  } //temp_hum_interface
         if (isdrawextio) {move([-28,W2/2-eps,H_pcb_hi])cuboid([8,wally+2*eps,4],anchor=FWD+BOT);  } //Ext IO
+        if (isdrawlogo)  {move([L2/2-7,0,0]) mylogo(12,35,5.4,3.2,2.4,5);} //logo_pad
     }
 }
 
@@ -242,8 +252,6 @@ module top_case(){
         }
 }
 
-
-
 module conditional_half(cond, plane, children) {
     if (cond && $preview) { // 只有在预览模式且开关打开时才切开
         half_of(plane) children();
@@ -265,4 +273,6 @@ if (isdrawtop) {
 
 //下盖
 if (isdrawbase) { base_case(); }
+
+if (isdrawlogo) right(W) up(0.6) { xrot(180) mylogo(12,35,0.6,3.2,2.4,0.2);} //logo_pad
 }
