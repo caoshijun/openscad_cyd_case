@@ -52,5 +52,3 @@ Since there are many hardware revisions of the **Cheap Yellow Display (CYD)**, t
 4. **Snap together**—no hardware needed!
 
 ---
-
-**Would you like me to add a "License" (如 MIT 或 CC) section to the bottom, or perhaps a section on how people can support your work?**
