@@ -236,7 +236,7 @@ module top_case(){
             up(top_adj-0.1) union(){
                 grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) tube(h=H-H_pcb_hi-top_adj+0.1,od=support_pin_d1,id=support_pin_d3,ichamfer2=0.4,ochamfer1=-1.6,anchor=BOT);   //四个支撑柱
                 if (isdrawled) move([led_p_x,led_p_y,0]) cuboid([led_l+1.2,led_w+1.2,H-H_pcb_hi-top_adj-1],chamfer=-1.6,edges=BOT,anchor=BOT);  //LED屏蔽外壳
-                if (isdrawpenhole) {xcopies([-35,-20,0,20,38])move([0,-13.6,0]) cuboid([1.2,8,H-H_pcb_hi-top_adj-1],chamfer=-1.6,edges=BOT,anchor=LEFT+BOT);}         //touchpen 
+                if (isdrawpenhole) {xcopies([-35,-20,0,20,32])move([0,-13.6,0]) cuboid([1.2,8,H-H_pcb_hi-top_adj-1],chamfer=-1.6,edges=BOT,anchor=LEFT+BOT);}         //touchpen 
                 move([-(L2/2-3.26), 11.57])cuboid([3.4,4,H-top_adj-screen_mask_thickness-8],anchor=BOT); //boot
                 move([-(L2/2-3.26),-11.57])cuboid([3.4,4,H-top_adj-screen_mask_thickness-8],anchor=BOT); //reset
             }
