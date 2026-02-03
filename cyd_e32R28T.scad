@@ -12,23 +12,25 @@ isdrawtop=true;
 //是否将顶盖打开在旁边绘制
 isdrawtopside=true;         
 //是否打印speaker接口
-isdrawspk=false;  
+isdrawspk=true;  
 //是否打印电池接口
-isdrawbat=false; 
+isdrawbat=true; 
 //是否打印uart接口
-isdrawuart=false; 
+isdrawuart=true; 
 //是否打印MicroSD Card
-isdrawsdcard=false; 
+isdrawsdcard=true; 
 //是否打印spi接口
-isdrawspi=false;   
+isdrawspi=true;   
 //是否打印扩展IO接口
-isdrawextio=false;   
+isdrawextio=true;   
 //是否打印触摸笔隐藏孔
 isdrawpenhole=true;
 //是否为ws2812 LED绘制遮蔽罩
 isdrawled=true;
 //是否打印logo
 isdrawlogo=true;
+//是否挖出logo区域
+isdrawcutlogopad=true;
 //logo是否分体打印
 islogo_isolate=true;
 //是否打印logo支撑
@@ -140,7 +142,7 @@ module typec(typec_l=5.6,typec_r=1.8,typec_p_y=0){
 module typec_ext(typec_l=8,typec_r=3.5,typec_p_y=0){
     hole_depth=(wally+gapy)/2;
     X=L/2;Y=typec_p_y;Z=H_pcb_hi+1.8;
-    move([X+eps,Y,Z]) cuboid([hole_depth+2*eps, 12, 7], rounding = 2, edges = "X",anchor = RIGHT); 
+    move([X+eps,Y,Z]) cuboid([wally/2+2*eps, 12, 7], rounding = 2, edges = "X",anchor = RIGHT); 
 }
 //touch pen
 module touchpen(){   
@@ -189,7 +191,7 @@ module base_case(){
     recolor("gray") difference(){
         union(){
             drawbox(L,W,wallz,R,BR);  //basewall
-            if (isdrawlogo && !islogo_isolate ) logo_text(); 
+            if (isdrawlogo && !isdrawcutlogopad ) logo_text(); 
             up(wallz) cuboid([L,W,gapz],rounding=R,edges="Z",anchor=BOT) position(TOP)  
             union(){
                 grid_copies([support_pin_length,support_pin_wildth], n=[2,2]) cyl(h=H_pcb_lo-wallz-gapz,d=support_pin_d1,chamfer1=-1.6,anchor=BOT) position(TOP) 
@@ -215,7 +217,7 @@ module base_case(){
         if (isdrawextio)   {move([-24.75,-W2/2+eps,H_pcb_hi])   cuboid([8,wally+2*eps,4],anchor=BACK+BOT);  }     //Ext IO
         if (isdrawspi)     {move([-8.52,-W2/2+eps,H_pcb_hi])    cuboid([8,wally+2*eps,4],anchor=BACK+BOT);  }     //SPI
         if (isdrawpenhole) {move([-(L/2)-eps,-12,H_pcb_hi+1.6]) touchpen();}  //touch pen
-        if (isdrawlogo && islogo_isolate ) {move([L2/2-7,0,-eps]) mylogo(12,35+eps,screen_height+screen_mask_thickness+0.4,3.2,2.4,screen_height+screen_mask_thickness+2*eps);} //else if (isdrawlogo) {logo_text();}  //logo pad
+        if (isdrawlogo && isdrawcutlogopad ) {move([L2/2-7,0,-eps]) mylogo(12,35+eps,screen_height+screen_mask_thickness+0.4,3.2,2.4,screen_height+screen_mask_thickness+2*eps);} //else if (isdrawlogo) {logo_text();}  //logo pad
         }
 
 }
