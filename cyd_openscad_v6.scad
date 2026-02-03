@@ -191,8 +191,6 @@ module button_text(){
 
 module logo_text(){
     color("red") move([32+ft_adj_x,0,0.2]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=fontsize,anchor=BOT);
-    color("red") move([32+ft_adj_x,0,0.2]) zrot(-90) mirror([1,0,0]) text3d(logo_text,direction="ltr",font="Arial:style=Bold", h=0.2+eps,size=fontsize,anchor=TOP);
-
 }
 
 module mylogo(L=10,W=30,H=0.6,snip_l=3,snip_w=2,snip_h=0.2,fs=10,logo=false){
