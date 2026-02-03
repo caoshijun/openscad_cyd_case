@@ -146,7 +146,7 @@ echo(H=H,H1=H1,H11=H11,H2=H2,H21=H21);
 
 R=roundsize;
 BR=chamfersize;
-uart_p_y=(esp32boardname=="GUITION") ?  -11   : -9 ;
+uart_p_y=(esp32boardname=="GUITION") ?  -10   : -9 ;
 typc_p_y=(esp32boardname=="GUITION") ?  1.4   : 1.8 ;
 
 module microtypec(typec_l=5.6,typec_r=1.8){
